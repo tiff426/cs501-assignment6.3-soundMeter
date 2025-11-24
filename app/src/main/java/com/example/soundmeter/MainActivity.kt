@@ -31,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -151,7 +152,7 @@ class SoundMeterViewModel : ViewModel() {
         if (amp <= 0f) {
             return 0f
         } else {
-            return 20f * kotlin.math.log10(amp.toDouble()).toFloat()
+            return 20f * kotlin.math.log10(amp.toDouble()).toFloat() + 10f
         }
     }
 }
@@ -161,7 +162,7 @@ class SoundMeterViewModel : ViewModel() {
 @Composable
 fun SoundMeterScreen() {
     var db by rememberSaveable { mutableStateOf(0f) }
-    var recorder by rememberSaveable { mutableStateOf<AudioRecord?>(null) }
+    var recorder by remember { mutableStateOf<AudioRecord?>(null) }
     val viewModel = SoundMeterViewModel()
     var hasPermission by rememberSaveable { mutableStateOf(false) }
 
@@ -175,9 +176,9 @@ fun SoundMeterScreen() {
         hasPermission = isGranted
     }
 
-//    LaunchedEffect(Unit) {
-//        launcher.launch(Manifest.permission.RECORD_AUDIO)
-//    }
+    LaunchedEffect(Unit) {
+        launcher.launch(Manifest.permission.RECORD_AUDIO)
+    }
 
     LaunchedEffect(true) {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
@@ -205,7 +206,7 @@ fun SoundMeterScreen() {
     }
 
     // actual ui
-    val normalized = ((db + 60f) / 60f).coerceIn(0f, 1f) // for progress bar
+    val normalized = (db / 100f).coerceIn(0f, 1f)// for progress bar
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -221,9 +222,8 @@ fun SoundMeterScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(24.dp),
-            color = if (db > 50f) {Color.Red} else {Color.Green}
+            color = if (db > 90f) {Color.Red} else {Color.Green}
         )
-        Text(text = if (db > 50f) {"too loud!"} else {""})
+        Text(text = if (db > 90f) {"too loud!"} else {""})
     }
 }
-
